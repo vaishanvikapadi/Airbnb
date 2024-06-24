@@ -2,35 +2,89 @@
 
 <div class="row mt-3">
   <div class="col-8 offset-2">
-    <h3>Listing Details</h3>
-</div>
-  <div class="card col-6 offset-3 show-card" style="width: 30rem; height: 25rem;" >
-    <img 
-    src="<%= listing.image.url %>" 
-    class="card-img-top" 
-    alt="Listing image" />
+    <h3><b><%= listing.title %></b></h3>
+  </div>
+  <div class="card col-6 offset-3 show-card listing-card" style="width: 30rem; height: 25rem;">
+    <img src="<%= listing.image && listing.image.url ? listing.image.url : listing.image %>"
+         class="card-img-top" alt="listing_image">
     <div class="card-body">
       <p class="card-text">
-        <b><%= listing.title %></b><br />
+        <i> Owned By: <%= listing.owner.username %></i>
+        <br>
         <%= listing.description %><br />
         <% if (listing.price != null) { %>
           <%= listing.price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-      <% } else { %>
+        <% } else { %>
           Price not available
-      <% } %> 
-      / night  <br>
+        <% } %> 
+        / night  <br>
         <%= listing.location %><br>
         <%= listing.country %>
-        <div class="btns">
-          <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark  add-btn offset-1">Edit</a>
-          <form method="POST" action="/listings/<%= listing._id%>?_method=DELETE" >
-            <button class="btn btn-dark offset-8">Delete</button>
-          </form>
-      </div>
+        <% if (CurrUser && CurrUser._id.equals(listing.owner._id)) { %>
+          <div class="btns">
+            <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark add-btn offset-1">Edit</a>
+            <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE">
+              <button class="btn btn-dark offset-8">Delete</button>
+            </form>
+          </div>
+        <% } %>
       </p>
-      <br>
-      <br>
-      <br>
     </div>
   </div>
+</div>
+<br />
+<hr>
+
+<div class="col-8 offset-3 mb-3">
+  <h4>Leave a Review</h4>
+  <% if (CurrUser) { %>
+  <form action="/listings/<%= listing._id %>/reviews" method="POST" novalidate class="needs-validation">
+    <div class="mb-3 mt-3">
+      <label for="rating" class="form-label">Rating</label>
+      <input type="range" min="1" max="5" id="rating" name="review[rating]" class="form-range">
+    </div>
+    <!-- <fieldset class="starability-slot">
+      <legend>First rating:</legend>
+      <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="0" checked aria-label="No rating." />
+      <input type="radio" id="first-rate1" name="review[rating]" value="1" />
+      <label for="first-rate1" title="Terrible">1 star</label>
+      <input type="radio" id="first-rate2" name="review[rating]" value="2" />
+      <label for="first-rate2" title="Not good">2 stars</label>
+      <input type="radio" id="first-rate3" name="review[rating]" value="3" />
+      <label for="first-rate3" title="Average">3 stars</label>
+      <input type="radio" id="first-rate4" name="review[rating]" value="4" />
+      <label for="first-rate4" title="Very good">4 stars</label>
+      <input type="radio" id="first-rate5" name="review[rating]" value="5" />
+      <label for="first-rate5" title="Amazing">5 stars</label>
+    </fieldset> -->
+    <div class="mb-3 mt-3">
+      <label for="comment" class="form-label">Comments:</label>
+      <textarea name="review[comment]" id="comment" cols="30" rows="5" class="form-control" required></textarea>
+      <div class="invalid-feedback">Please enter valid comments</div>
+    </div>
+    <button class="btn btn-outline-dark">Submit</button>
+  </form>
+  <% } %>
+
+<hr>
+
+<h4><b>--------All Reviews-------</b></h4>
+<div class="row">
+  <% for (let review of listing.reviews) { %>
+    <div class="col-md-4 mb-3">
+      <div class="card card-border">
+        <div class="card-body">
+          <h5 class="card-title">@<%= review.author.username %></h5>
+          <p class="card-text d-inline"><%= review.comment %></p>
+          <div class="d-flex align-items-center">
+            <p class="card-text mb-0"><%= review.rating %> stars</p>
+            <form class="ms-2 mb-0" method="POST" action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
+              <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
 </div>
