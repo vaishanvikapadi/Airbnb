@@ -49,8 +49,8 @@ Check out the live demo of the project: [WanderLust](https://airbnb-2dsh.onrende
 2.Install dependencies:
 
 ```bash
-   Copy code
    npm install
+
 
 
 3.Set up environment variables:
