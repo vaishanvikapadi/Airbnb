@@ -6,16 +6,14 @@ if(process.env.NODE_ENV != "production"){
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-// const Listing = require("./modules/listing.js");
+
 const port = 8080;
 const path = require('path');
 var methodOverride = require('method-override')
 const ejsMate=require("ejs-mate");
-// const wrapAsync=require("./utils/wrapAsync");
-const url = 'mongodb://127.0.0.1:27017/wanderlust';
-const ExpressError=require("./utils/ExpressError");
-// const { listingSchema, reviewSchema}=require("./schema.js");
-// const Review=require("./modules/review");
+
+
+const dbUrl=process.env.ATLASDB_URL;
 const User=require("./modules/users.js");
 
 const listingRouter=require("./routes/listings.js");
@@ -23,6 +21,7 @@ const reviewRouter=require("./routes/review.js");
 const userRouter=require("./routes/user.js");
 
 const session=require("express-session");
+const MongoStore = require('connect-mongo');
 const flash=require("connect-flash");
 const passport = require("passport");
 
@@ -31,15 +30,15 @@ const LocalStrategy=require("passport-local");
 
 async function main() {
   try {
-    await mongoose.connect(url);
+    await mongoose.connect(dbUrl);
     console.log("Connected to DB");
   } catch (err) {
     console.error("Failed to connect to DB:", err);
   }
 }
 
-main();
 
+main();
 // Set the view engine to ejs
 app.set('view engine', 'ejs');
 
@@ -50,9 +49,21 @@ app.use(methodOverride('_method'));
 app.engine('ejs', ejsMate);
 app.use(express.static(path.join(__dirname,"/public")));
 
+const store=MongoStore.create({
+  mongoUrl:dbUrl,
+  crypto:{
+    secret:process.env.SECRET,
+  },
+  touchAfter:25*3600,
+});
+
+store.on("error",()=>{
+  console.log("ERROR in MONGO SESSION STORE",err);
+})
 
 const sessionOption={
-  secret:"mysupersecretcode",
+  store:store,
+  secret:process.env.SECRET,
   resave:false,
   saveUninitialized:true,
   cookie:{
@@ -62,9 +73,6 @@ const sessionOption={
   },
 }
 
-app.get("/", (req, res) => {
-  res.send("Working");
-});
 
 app.use(session(sessionOption));
 app.use(flash());
@@ -88,10 +96,6 @@ app.use("/listings",listingRouter);
 app.use("/listings/:id/reviews",reviewRouter);
 app.use("/",userRouter);
 
-
-app.all("*",(req,res,next)=>{
-  next(new ExpressError(404,"Page Not Found"));
-})
 // app.use((err,req,res,next)=>{
 //   let {statusCode=500,message="some thing is wrongs"}=err;
 //   res.status(statusCode).json({ error: message });
@@ -111,6 +115,10 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.json({ error: err.message });
 });
+
+// app.all("*",(req,res,next)=>{
+//   next(new ExpressError(404,"Page Not Found"));
+// })
 
 
 app.listen(port, () => {

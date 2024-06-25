@@ -37,3 +37,4 @@ module.exports.login=async(req,res)=>{
     let redirectUrl=res.locals.redirectUrl||"/listings";
     res.redirect(redirectUrl);
 };
+

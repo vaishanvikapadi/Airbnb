@@ -66,27 +66,29 @@ module.exports.createListing=async(req,res,next)=>{
   };
 
   module.exports.updatelisting=async(req,res)=>{
-    let {id}=req.params;
-    let listing=await Listing.findByIdAndUpdate(id, {...req.body.listing});
-    if(!req.body.listing){
-      throw new ExpressError(400,"Send Valid Data For listings");
-    }
-    if(!listing){
-      req.flash("error","Listing You Requested for does nor exist !");
-      re.redirect("/listings");
-    }
-    
-    if(req.file !=="undefined"){
-    let url=req.file.path;
-    let filename=req.file.filename;
-    listing.image={url,filename};
-    await listing.save();
-    }
-
-    console.log("Listings"+ listing);
-    req.flash("success","Listings Update Successfully!");
-    res.redirect(`/listings/${id}`);
   
+
+    try {
+      const { id } = req.params;
+      const listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing }, { new: true });
+  
+      if (!listing) {
+        req.flash("error", "Listing you requested does not exist!");
+        return res.redirect("/listings");
+      }
+  
+      if (req.file) {
+        const url = req.file.path;
+        const filename = req.file.filename;
+        listing.image = { url, filename };
+        await listing.save();
+      }
+  
+      req.flash("success", "Listing updated successfully!");
+      res.redirect(`/listings/${id}`);
+    } catch (error) {
+      next(error);
+    }
   };
 
   module.exports.deleteListing=async (req,res)=>{
